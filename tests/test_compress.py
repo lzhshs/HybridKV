@@ -4,6 +4,7 @@ import pytest
 import torch
 from transformers import GPTNeoXForCausalLM, AutoTokenizer, DynamicCache
 from snapkv import snap_kv_compress, SnapKVWrapper
+from streaming_llm import streaming_llm_compress, StreamingLLMWrapper
 
 
 @pytest.fixture(scope="module")
@@ -64,3 +65,37 @@ def test_snapkv_wrapper_prefill(model_and_input):
     wrapper = SnapKVWrapper(model, window_size=32, max_capacity=64)
     outputs, compressed = wrapper.prefill_and_compress(input_ids)
     assert compressed.layers[0].keys.shape[2] == 64 + 32
+
+
+def test_streaming_llm_compress(model_and_input):
+    """StreamingLLM keeps exactly sink + window tokens."""
+    model, input_ids = model_and_input
+    n_sink, window_size = 4, 32
+
+    with torch.no_grad():
+        out = model(input_ids=input_ids, use_cache=True)
+
+    cache = out.past_key_values
+    compressed = streaming_llm_compress(cache, n_sink=n_sink, window_size=window_size)
+    expected_len = n_sink + window_size
+    assert compressed.layers[0].keys.shape[2] == expected_len
+    assert compressed.layers[0].values.shape[2] == expected_len
+
+
+def test_streaming_llm_compress_noop_short():
+    """StreamingLLM returns cache unchanged if seq <= sink + window."""
+    cache = DynamicCache()
+    key = torch.randn(1, 8, 30, 64)
+    value = torch.randn(1, 8, 30, 64)
+    cache.update(key, value, 0)
+    result = streaming_llm_compress(cache, n_sink=4, window_size=32)
+    assert result.layers[0].keys.shape[2] == 30
+
+
+def test_streaming_llm_wrapper_prefill(model_and_input):
+    """StreamingLLMWrapper.prefill_and_compress returns compressed cache."""
+    model, input_ids = model_and_input
+    wrapper = StreamingLLMWrapper(model, n_sink=4, window_size=32)
+    outputs, compressed = wrapper.prefill_and_compress(input_ids)
+    assert compressed.layers[0].keys.shape[2] == 4 + 32
+    assert outputs.logits.shape[1] == input_ids.shape[1]
