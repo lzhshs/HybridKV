@@ -1,0 +1,42 @@
+{
+  "dataset": "wikitext",
+  "max_tokens": 2048,
+  "dense": {
+    "ppl": 32.24910354614258,
+    "total_tokens": 2048,
+    "time_seconds": 0.55,
+    "tokens_per_second": 3727.9
+  },
+  "streaming_llm": {
+    "ppl": 32.24910354614258,
+    "total_tokens": 2047,
+    "time_seconds": 0.59,
+    "tokens_per_second": 3454.3,
+    "kv_budget": 36
+  },
+  "snapkv": {
+    "ppl": 32.24910354614258,
+    "total_tokens": 2047,
+    "time_seconds": 0.62,
+    "tokens_per_second": 3322.7,
+    "kv_budget": 160
+  },
+  "hybridkv": {
+    "ppl": 32.24910354614258,
+    "total_tokens": 2047,
+    "time_seconds": 0.52,
+    "tokens_per_second": 3920.4,
+    "kv_budget": 160
+  },
+  "config": {
+    "n_sink": 4,
+    "max_capacity": 128,
+    "window_size": 32,
+    "kernel_size": 5,
+    "shallow_layers": [
+      0,
+      1,
+      2
+    ]
+  }
+}

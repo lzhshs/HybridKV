@@ -1,0 +1,254 @@
+[
+  {
+    "dataset": "wikitext",
+    "max_tokens": 16384,
+    "dense": {
+      "ppl": 39.47601318359375,
+      "total_tokens": 16384,
+      "time_seconds": 13.43,
+      "tokens_per_second": 1220.4
+    },
+    "streaming_llm": {
+      "ppl": 39.476505279541016,
+      "total_tokens": 16383,
+      "time_seconds": 13.09,
+      "tokens_per_second": 1251.2,
+      "kv_budget": 36
+    },
+    "snapkv": {
+      "ppl": 39.476505279541016,
+      "total_tokens": 16383,
+      "time_seconds": 14.69,
+      "tokens_per_second": 1115.1,
+      "kv_budget": 96
+    },
+    "hybridkv": {
+      "ppl": 39.476505279541016,
+      "total_tokens": 16383,
+      "time_seconds": 14.95,
+      "tokens_per_second": 1095.9,
+      "kv_budget": 96
+    },
+    "config": {
+      "n_sink": 4,
+      "max_capacity": 64,
+      "window_size": 32,
+      "kernel_size": 5,
+      "shallow_layers": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "dataset": "wikitext",
+    "max_tokens": 16384,
+    "dense": {
+      "ppl": 39.47601318359375,
+      "total_tokens": 16384,
+      "time_seconds": 13.85,
+      "tokens_per_second": 1182.7
+    },
+    "streaming_llm": {
+      "ppl": 39.476505279541016,
+      "total_tokens": 16383,
+      "time_seconds": 13.24,
+      "tokens_per_second": 1237.1,
+      "kv_budget": 36
+    },
+    "snapkv": {
+      "ppl": 39.476505279541016,
+      "total_tokens": 16383,
+      "time_seconds": 14.05,
+      "tokens_per_second": 1166.0,
+      "kv_budget": 160
+    },
+    "hybridkv": {
+      "ppl": 39.476505279541016,
+      "total_tokens": 16383,
+      "time_seconds": 13.42,
+      "tokens_per_second": 1220.3,
+      "kv_budget": 160
+    },
+    "config": {
+      "n_sink": 4,
+      "max_capacity": 128,
+      "window_size": 32,
+      "kernel_size": 5,
+      "shallow_layers": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "dataset": "wikitext",
+    "max_tokens": 16384,
+    "dense": {
+      "ppl": 39.47601318359375,
+      "total_tokens": 16384,
+      "time_seconds": 13.54,
+      "tokens_per_second": 1209.8
+    },
+    "streaming_llm": {
+      "ppl": 39.476505279541016,
+      "total_tokens": 16383,
+      "time_seconds": 12.96,
+      "tokens_per_second": 1263.6,
+      "kv_budget": 36
+    },
+    "snapkv": {
+      "ppl": 39.476505279541016,
+      "total_tokens": 16383,
+      "time_seconds": 14.07,
+      "tokens_per_second": 1164.3,
+      "kv_budget": 288
+    },
+    "hybridkv": {
+      "ppl": 39.476505279541016,
+      "total_tokens": 16383,
+      "time_seconds": 13.53,
+      "tokens_per_second": 1210.7,
+      "kv_budget": 288
+    },
+    "config": {
+      "n_sink": 4,
+      "max_capacity": 256,
+      "window_size": 32,
+      "kernel_size": 5,
+      "shallow_layers": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "dataset": "pg19",
+    "max_tokens": 16384,
+    "dense": {
+      "ppl": 31.42487907409668,
+      "total_tokens": 16384,
+      "time_seconds": 13.5,
+      "tokens_per_second": 1213.5
+    },
+    "streaming_llm": {
+      "ppl": 31.424991607666016,
+      "total_tokens": 16383,
+      "time_seconds": 12.96,
+      "tokens_per_second": 1263.9,
+      "kv_budget": 36
+    },
+    "snapkv": {
+      "ppl": 31.424991607666016,
+      "total_tokens": 16383,
+      "time_seconds": 13.99,
+      "tokens_per_second": 1171.1,
+      "kv_budget": 96
+    },
+    "hybridkv": {
+      "ppl": 31.424991607666016,
+      "total_tokens": 16383,
+      "time_seconds": 13.65,
+      "tokens_per_second": 1200.5,
+      "kv_budget": 96
+    },
+    "config": {
+      "n_sink": 4,
+      "max_capacity": 64,
+      "window_size": 32,
+      "kernel_size": 5,
+      "shallow_layers": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "dataset": "pg19",
+    "max_tokens": 16384,
+    "dense": {
+      "ppl": 31.42487907409668,
+      "total_tokens": 16384,
+      "time_seconds": 13.62,
+      "tokens_per_second": 1203.4
+    },
+    "streaming_llm": {
+      "ppl": 31.424991607666016,
+      "total_tokens": 16383,
+      "time_seconds": 12.81,
+      "tokens_per_second": 1279.4,
+      "kv_budget": 36
+    },
+    "snapkv": {
+      "ppl": 31.424991607666016,
+      "total_tokens": 16383,
+      "time_seconds": 13.59,
+      "tokens_per_second": 1205.9,
+      "kv_budget": 160
+    },
+    "hybridkv": {
+      "ppl": 31.424991607666016,
+      "total_tokens": 16383,
+      "time_seconds": 12.85,
+      "tokens_per_second": 1275.3,
+      "kv_budget": 160
+    },
+    "config": {
+      "n_sink": 4,
+      "max_capacity": 128,
+      "window_size": 32,
+      "kernel_size": 5,
+      "shallow_layers": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "dataset": "pg19",
+    "max_tokens": 16384,
+    "dense": {
+      "ppl": 31.42487907409668,
+      "total_tokens": 16384,
+      "time_seconds": 13.48,
+      "tokens_per_second": 1215.7
+    },
+    "streaming_llm": {
+      "ppl": 31.424991607666016,
+      "total_tokens": 16383,
+      "time_seconds": 12.85,
+      "tokens_per_second": 1275.0,
+      "kv_budget": 36
+    },
+    "snapkv": {
+      "ppl": 31.424991607666016,
+      "total_tokens": 16383,
+      "time_seconds": 13.77,
+      "tokens_per_second": 1189.9,
+      "kv_budget": 288
+    },
+    "hybridkv": {
+      "ppl": 31.424991607666016,
+      "total_tokens": 16383,
+      "time_seconds": 13.21,
+      "tokens_per_second": 1240.4,
+      "kv_budget": 288
+    },
+    "config": {
+      "n_sink": 4,
+      "max_capacity": 256,
+      "window_size": 32,
+      "kernel_size": 5,
+      "shallow_layers": [
+        0,
+        1,
+        2
+      ]
+    }
+  }
+]

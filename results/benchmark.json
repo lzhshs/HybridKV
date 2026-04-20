@@ -1,0 +1,54 @@
+{
+  "results": [
+    {
+      "method": "dense",
+      "context_len": 1024,
+      "num_generated": 128,
+      "ttft_ms": 217.49,
+      "tpot_ms": 6.98,
+      "throughput_tok_s": 143.3,
+      "decode_time_s": 0.886,
+      "kv_cache_len": 1151
+    },
+    {
+      "method": "streaming_llm",
+      "context_len": 1024,
+      "num_generated": 128,
+      "ttft_ms": 239.52,
+      "tpot_ms": 4.67,
+      "throughput_tok_s": 214.1,
+      "decode_time_s": 0.593,
+      "kv_cache_len": 163
+    },
+    {
+      "method": "snapkv",
+      "context_len": 1024,
+      "num_generated": 128,
+      "ttft_ms": 243.41,
+      "tpot_ms": 5.1,
+      "throughput_tok_s": 196.0,
+      "decode_time_s": 0.648,
+      "kv_cache_len": 287
+    },
+    {
+      "method": "hybridkv",
+      "context_len": 1024,
+      "num_generated": 128,
+      "ttft_ms": 215.68,
+      "tpot_ms": 5.14,
+      "throughput_tok_s": 194.7,
+      "decode_time_s": 0.652,
+      "kv_cache_len": 287
+    }
+  ],
+  "args": {
+    "dataset": "wikitext",
+    "context_len": 1024,
+    "num_generate": 128,
+    "device": "cpu",
+    "max_capacity": 128,
+    "window_size": 32,
+    "kernel_size": 5,
+    "n_sink": 4
+  }
+}

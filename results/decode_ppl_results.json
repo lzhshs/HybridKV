@@ -1,0 +1,470 @@
+[
+  {
+    "dataset": "wikitext",
+    "context_len": 512,
+    "max_capacity": 64,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 16.68324089050293,
+        "context_kv_len": 1024,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.17
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 65.2454833984375,
+        "context_kv_len": 548,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 52.56007385253906,
+        "context_kv_len": 608,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 53.355159759521484,
+        "context_kv_len": 608,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      }
+    }
+  },
+  {
+    "dataset": "wikitext",
+    "context_len": 512,
+    "max_capacity": 128,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 16.68324089050293,
+        "context_kv_len": 1024,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.15
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 65.2454833984375,
+        "context_kv_len": 548,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 45.44476318359375,
+        "context_kv_len": 672,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 45.966102600097656,
+        "context_kv_len": 672,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      }
+    }
+  },
+  {
+    "dataset": "wikitext",
+    "context_len": 512,
+    "max_capacity": 256,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 16.68324089050293,
+        "context_kv_len": 1024,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.16
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 65.2454833984375,
+        "context_kv_len": 548,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 33.95058059692383,
+        "context_kv_len": 800,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 34.66093444824219,
+        "context_kv_len": 800,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.15
+      }
+    }
+  },
+  {
+    "dataset": "wikitext",
+    "context_len": 1024,
+    "max_capacity": 64,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 30.433551788330078,
+        "context_kv_len": 1536,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.26
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 58.572303771972656,
+        "context_kv_len": 548,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.23
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 51.5283203125,
+        "context_kv_len": 608,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.24
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 51.89731979370117,
+        "context_kv_len": 608,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.22
+      }
+    }
+  },
+  {
+    "dataset": "wikitext",
+    "context_len": 1024,
+    "max_capacity": 128,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 30.433551788330078,
+        "context_kv_len": 1536,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.26
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 58.572303771972656,
+        "context_kv_len": 548,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.22
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 48.18218231201172,
+        "context_kv_len": 672,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.24
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 48.15153121948242,
+        "context_kv_len": 672,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.23
+      }
+    }
+  },
+  {
+    "dataset": "wikitext",
+    "context_len": 1024,
+    "max_capacity": 256,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 30.433551788330078,
+        "context_kv_len": 1536,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.26
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 58.572303771972656,
+        "context_kv_len": 548,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.23
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 44.13007736206055,
+        "context_kv_len": 800,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.24
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 44.338375091552734,
+        "context_kv_len": 800,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.23
+      }
+    }
+  },
+  {
+    "dataset": "pg19",
+    "context_len": 512,
+    "max_capacity": 64,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 25.740036010742188,
+        "context_kv_len": 1024,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.17
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 26.204544067382812,
+        "context_kv_len": 548,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 26.0079402923584,
+        "context_kv_len": 608,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 25.881893157958984,
+        "context_kv_len": 608,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      }
+    }
+  },
+  {
+    "dataset": "pg19",
+    "context_len": 512,
+    "max_capacity": 128,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 25.740036010742188,
+        "context_kv_len": 1024,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.16
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 26.204544067382812,
+        "context_kv_len": 548,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.13
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 25.838703155517578,
+        "context_kv_len": 672,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 25.763961791992188,
+        "context_kv_len": 672,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      }
+    }
+  },
+  {
+    "dataset": "pg19",
+    "context_len": 512,
+    "max_capacity": 256,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 25.740036010742188,
+        "context_kv_len": 1024,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.16
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 26.204544067382812,
+        "context_kv_len": 548,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.16
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 25.776552200317383,
+        "context_kv_len": 800,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.15
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 25.727930068969727,
+        "context_kv_len": 800,
+        "context_len": 512,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.14
+      }
+    }
+  },
+  {
+    "dataset": "pg19",
+    "context_len": 1024,
+    "max_capacity": 64,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 26.56671905517578,
+        "context_kv_len": 1536,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.26
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 28.78025245666504,
+        "context_kv_len": 548,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.22
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 27.753259658813477,
+        "context_kv_len": 608,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.24
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 27.86928367614746,
+        "context_kv_len": 608,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.24
+      }
+    }
+  },
+  {
+    "dataset": "pg19",
+    "context_len": 1024,
+    "max_capacity": 128,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 26.56671905517578,
+        "context_kv_len": 1536,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.26
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 28.78025245666504,
+        "context_kv_len": 548,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.22
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 27.341459274291992,
+        "context_kv_len": 672,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.23
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 27.117673873901367,
+        "context_kv_len": 672,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.23
+      }
+    }
+  },
+  {
+    "dataset": "pg19",
+    "context_len": 1024,
+    "max_capacity": 256,
+    "results": {
+      "dense": {
+        "method": "dense",
+        "ppl": 26.56671905517578,
+        "context_kv_len": 1536,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.26
+      },
+      "streaming_llm": {
+        "method": "streaming_llm",
+        "ppl": 28.78025245666504,
+        "context_kv_len": 548,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.22
+      },
+      "snapkv": {
+        "method": "snapkv",
+        "ppl": 27.099111557006836,
+        "context_kv_len": 800,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.26
+      },
+      "hybridkv": {
+        "method": "hybridkv",
+        "ppl": 26.87458610534668,
+        "context_kv_len": 800,
+        "context_len": 1024,
+        "num_continuation_tokens": 512,
+        "time_seconds": 0.24
+      }
+    }
+  }
+]
