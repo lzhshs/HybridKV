@@ -23,6 +23,7 @@
 \begin{document}
 
 \maketitle
+\thispagestyle{plain}
 
 \begin{abstract}
 KV cache compression is critical for efficient inference in autoregressive language models. Existing methods apply a single strategy uniformly across all layers: StreamingLLM retains attention sink tokens and a sliding window, while SnapKV uses attention-based voting to select important tokens. We propose HybridKV, a training-free, layer-adaptive KV cache compression method that combines a three-segment cache structure---$[\text{Sink}] + [\text{Selected}] + [\text{Window}]$---with per-layer selection strategies: recency-based selection for shallow layers and attention-voting for deep layers. Experiments on Pythia-70M with PG-19 and WikiText-2 show that HybridKV consistently outperforms both StreamingLLM and SnapKV on PG-19 long-form text, and matches SnapKV on WikiText-2, while maintaining comparable inference speed. Ablation studies reveal that the complementary combination of recency-based and voting-based selection, rather than sink preservation alone, is the primary driver of improvement, and that the optimal layer partitioning is model-scale dependent.
