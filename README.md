@@ -25,28 +25,13 @@ Model and datasets are downloaded automatically from HuggingFace on first run.
 
 ## Usage
 
-### 1. Sliding-Window PPL Evaluation
-
-Compares prefill-stage perplexity across all 4 methods:
-
-```bash
-# Single config
-python evaluate.py --dataset wikitext --max-tokens 8192
-
-# Full comparison (both datasets x multiple capacities)
-python evaluate.py --run-all
-
-# Specify device
-python evaluate.py --dataset pg19 --max-tokens 16384 --device mps
-```
-
-### 2. Decode PPL Evaluation (Recommended)
+### 1. Decode PPL Evaluation (Recommended)
 
 Measures the **actual impact of compression** on continuation quality. Prefills context, compresses KV cache, then evaluates PPL on continuation tokens:
 
 ```bash
 # Single config
-python evaluate_decode.py --dataset wikitext --context-len 1024
+python evaluate_decode.py --dataset pg19 --context-len 1024
 
 # Full comparison (both datasets x multiple context lengths x multiple capacities)
 python evaluate_decode.py --run-all
@@ -55,13 +40,30 @@ python evaluate_decode.py --run-all
 python evaluate_decode.py --dataset pg19 --context-len 1024 --continuation-len 512 --max-capacity 128
 ```
 
-### 3. Speed Benchmark (TTFT / TPOT / Throughput)
+### 2. Ablation Study
+
+Runs SnapKV+Sink baseline and layer partitioning ablations:
+
+```bash
+python ablation.py --device cpu
+```
+
+### 3. Sliding-Window PPL Evaluation
+
+Compares prefill-stage perplexity across all 4 methods:
+
+```bash
+python evaluate.py --dataset wikitext --max-tokens 8192
+python evaluate.py --run-all
+```
+
+### 4. Speed Benchmark (TTFT / TPOT / Throughput)
 
 ```bash
 python benchmark.py --context-len 1024 --num-generate 128
 ```
 
-### 4. Run Tests
+### 5. Run Tests
 
 ```bash
 python -m pytest tests/ -v
@@ -78,16 +80,27 @@ python -m pytest tests/ -v
 
 ## Experiment Results
 
-### Decode PPL (pg19, context=1024, continuation=512)
+### Decode PPL (PG-19, context=1024, continuation=512)
 
 | Method | cap=64 | cap=128 | cap=256 |
 |--------|--------|---------|---------|
 | Dense | 26.57 | 26.57 | 26.57 |
 | StreamingLLM | 28.78 | 28.78 | 28.78 |
-| SnapKV | 27.75 | 27.34 | 27.10 |
-| **HybridKV** | **27.87** | **27.12** | **26.87** |
+| SnapKV | **27.75** | 27.34 | 27.10 |
+| **HybridKV** | 27.87 | **27.12** | **26.87** |
 
 At cap=128 and cap=256, HybridKV achieves lower PPL than both StreamingLLM and SnapKV, approaching the Dense baseline.
+
+### Ablation Study (PG-19, context=1024, cap=128)
+
+| Configuration | Decode PPL | vs SnapKV |
+|---------------|-----------|-----------|
+| SnapKV (original) | 27.34 | --- |
+| SnapKV+Sink (all voting + sink) | 27.35 | +0.01 |
+| HybridKV S={0,1,2} (default) | 27.12 | -0.22 |
+| HybridKV S={0,...,5} (all recency) | 26.96 | -0.38 |
+
+Key findings: (1) Sink preservation alone does not improve SnapKV. (2) Replacing voting with recency in any layer subset improves over pure voting. (3) The optimal layer partitioning is model-scale dependent.
 
 ### Speed Benchmark (context=1024, generate=128)
 
@@ -107,7 +120,10 @@ At cap=128 and cap=256, HybridKV achieves lower PPL than both StreamingLLM and S
 ├── hybridkv.py          # HybridKV layer-adaptive compression + evaluation
 ├── evaluate.py          # Unified sliding-window PPL comparison (4 methods)
 ├── evaluate_decode.py   # Unified decode PPL comparison (4 methods)
+├── ablation.py          # Ablation study: SnapKV+Sink, layer partitioning
 ├── benchmark.py         # Speed benchmark: TTFT, TPOT, throughput
+├── main.tex             # NeurIPS-style paper (compile with xelatex)
+├── neurips_2025.sty     # NeurIPS 2025 style file
 ├── tests/
 │   └── test_compress.py # Unit tests for all compression methods
 ├── results/             # Experiment output (JSON)

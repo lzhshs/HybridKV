@@ -1,0 +1,84 @@
+{
+  "snapkv_sink": {
+    "method": "hybridkv",
+    "ppl": 27.353483200073242,
+    "context_kv_len": 672,
+    "context_len": 1024,
+    "num_continuation_tokens": 512,
+    "time_seconds": 0.31
+  },
+  "partitions": {
+    "S={}": {
+      "method": "hybridkv",
+      "ppl": 27.353483200073242,
+      "context_kv_len": 672,
+      "context_len": 1024,
+      "num_continuation_tokens": 512,
+      "time_seconds": 0.24
+    },
+    "S={0}": {
+      "method": "hybridkv",
+      "ppl": 27.057483673095703,
+      "context_kv_len": 672,
+      "context_len": 1024,
+      "num_continuation_tokens": 512,
+      "time_seconds": 0.24
+    },
+    "S={0,1}": {
+      "method": "hybridkv",
+      "ppl": 27.10698890686035,
+      "context_kv_len": 672,
+      "context_len": 1024,
+      "num_continuation_tokens": 512,
+      "time_seconds": 0.23
+    },
+    "S={0,1,2}": {
+      "method": "hybridkv",
+      "ppl": 27.117673873901367,
+      "context_kv_len": 672,
+      "context_len": 1024,
+      "num_continuation_tokens": 512,
+      "time_seconds": 0.23
+    },
+    "S={0,1,2,3}": {
+      "method": "hybridkv",
+      "ppl": 27.04145050048828,
+      "context_kv_len": 672,
+      "context_len": 1024,
+      "num_continuation_tokens": 512,
+      "time_seconds": 0.24
+    },
+    "S={3,4,5}": {
+      "method": "hybridkv",
+      "ppl": 27.07012939453125,
+      "context_kv_len": 672,
+      "context_len": 1024,
+      "num_continuation_tokens": 512,
+      "time_seconds": 0.24
+    },
+    "S={0,...,5}": {
+      "method": "hybridkv",
+      "ppl": 26.95903968811035,
+      "context_kv_len": 672,
+      "context_len": 1024,
+      "num_continuation_tokens": 512,
+      "time_seconds": 0.24
+    }
+  },
+  "dense": {
+    "method": "dense",
+    "ppl": 26.56671905517578,
+    "context_kv_len": 1536,
+    "context_len": 1024,
+    "num_continuation_tokens": 512,
+    "time_seconds": 0.28
+  },
+  "snapkv": {
+    "method": "snapkv",
+    "ppl": 27.341459274291992,
+    "context_kv_len": 672,
+    "context_len": 1024,
+    "num_continuation_tokens": 512,
+    "time_seconds": 0.24
+  }
+}

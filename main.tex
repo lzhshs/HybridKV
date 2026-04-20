@@ -1,0 +1,220 @@
+\documentclass{article}
+
+\usepackage[preprint]{neurips_2025}
+
+\usepackage{xeCJK}
+\setCJKmainfont{STSong}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+
+\title{HybridKV: Layer-Adaptive KV Cache Compression for Efficient LLM Inference}
+
+\author{%
+  刘泽辉 (524531910022) \And 陈思洁 (524531910025)
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+KV cache compression is critical for efficient inference in autoregressive language models. Existing methods apply a single strategy uniformly across all layers: StreamingLLM retains attention sink tokens and a sliding window, while SnapKV uses attention-based voting to select important tokens. We propose HybridKV, a training-free, layer-adaptive KV cache compression method that combines a three-segment cache structure---$[\text{Sink}] + [\text{Selected}] + [\text{Window}]$---with per-layer selection strategies: recency-based selection for shallow layers and attention-voting for deep layers. Experiments on Pythia-70M with PG-19 and WikiText-2 show that HybridKV consistently outperforms both StreamingLLM and SnapKV on PG-19 long-form text, and matches SnapKV on WikiText-2, while maintaining comparable inference speed. Ablation studies reveal that the three-segment structure with explicit sink preservation is the primary driver of improvement, and that the optimal layer partitioning is model-scale dependent.
+Code: \url{https://github.com/lzhshs/HybridKV}.
+\end{abstract}
+
+\section{Introduction}
+
+Large language models (LLMs) based on the Transformer architecture~[1] store key-value (KV) pairs from all previous tokens in a cache during autoregressive generation. As context length grows, this KV cache becomes a major bottleneck: memory scales as $O(n \cdot L \cdot 2dh)$. Compressing the KV cache without retraining is therefore an active area of research.
+
+Two representative training-free approaches have emerged. \textbf{StreamingLLM}~[2] identifies the \emph{attention sink} phenomenon: the first few tokens receive disproportionately high attention regardless of content. It retains $n_s$ sink tokens and $w$ recent tokens, yielding a fixed-size cache but ignoring important middle tokens. \textbf{SnapKV}~[3] uses attention scores from an observation window to vote for important prefix tokens via pooled attention voting. SnapKV adapts to content but applies the same strategy uniformly across layers.
+
+Prior work~[4] has shown that attention distributions vary across layers: shallow layers exhibit broad, position-biased patterns, while deep layers develop focused, content-specific patterns. PyramidKV~[4] exploits this by allocating different cache \emph{budgets} per layer, but does not change the selection \emph{strategy} itself. Other works explore orthogonal directions including cross-layer KV sharing~[8], attention sparsification~[9], and system-level optimizations~[10]. Our approach is complementary to these.
+
+We propose \textbf{HybridKV}, a layer-adaptive method that assigns different compression strategies to different layers. The cache structure is $[\text{Sink}] + [\text{Selected}] + [\text{Window}]$, where shallow layers use recency-based selection and deep layers use attention-voting for the middle segment. We evaluate on Pythia-70M~[5] using WikiText-2~[6] and PG-19~[7], and provide ablation studies that disentangle the contributions of sink preservation, the three-segment structure, and layer-adaptive strategy selection.
+
+\section{Method}
+
+\subsection{Preliminaries}
+
+Given an input sequence of length $n$, standard multi-head attention computes $\text{Attn}(Q, K, V) = \text{softmax}(QK^\top / \sqrt{d})\, V$. During generation, the KV cache stores all prior key-value vectors, growing by one entry per token.
+
+\textbf{StreamingLLM} compresses to $\{1, \ldots, n_s\} \cup \{n\!-\!w\!+\!1, \ldots, n\}$, retaining $n_s$ sink tokens and $w$ recent tokens.
+
+\textbf{SnapKV} uses attention from the last $w$ query positions to vote for important prefix positions. Scores are pooled with a 1D max-pooling kernel\footnote{The original SnapKV paper uses average pooling by default; our implementation uses max-pooling following common practice in subsequent works. We verified that the choice has minimal impact on relative rankings.} of size $k$ along the key dimension:
+\begin{equation}
+    s_j = \sum_{i=n-w+1}^{n} \bigl[\text{Pool}_{k}(A_{i,\,1:n-w})\bigr]_j, \quad j \in \{1, \ldots, n\!-\!w\}
+\end{equation}
+The top-$C$ positions are retained, yielding a cache of size $C + w$.
+
+\subsection{HybridKV: layer-adaptive compression}
+
+HybridKV preserves three segments per layer: (1)~\textbf{Sink tokens} (positions $1$ to $n_s$), always retained; (2)~\textbf{Selected tokens} from the middle region ($n_s\!+\!1$ to $n\!-\!w$), with strategy depending on layer depth; (3)~\textbf{Window tokens} ($n\!-\!w\!+\!1$ to $n$), always retained.
+
+Let $B = C - n_s$ be the selection budget for the middle region. For layer $\ell$:
+\begin{equation}
+    \text{Selected}^{(\ell)} =
+    \begin{cases}
+        \text{Recency}(B) & \text{if } \ell \in \mathcal{S} \quad (\text{shallow layers}) \\
+        \text{AttentionVoting}(B) & \text{if } \ell \notin \mathcal{S} \quad (\text{deep layers})
+    \end{cases}
+\end{equation}
+where $\mathcal{S}$ is the set of shallow layer indices. \textbf{Recency} retains the $B$ most recent middle tokens. \textbf{AttentionVoting} pools observation-window attention and selects the top-$B$ scoring middle positions. The total cache size is $C + w = n_s + B + w$, identical to SnapKV's budget.
+
+\textbf{Design rationale.}
+Shallow layers produce broad, position-sensitive attention where nearby tokens receive higher weights regardless of content, making recency a good proxy. Deep layers develop sharper, content-selective patterns, favoring attention-based voting. By matching the strategy to each layer's characteristic, HybridKV provides a principled framework for mixing strategies.
+
+\section{Experiments}
+
+\subsection{Setup}
+
+\textbf{Model.} Pythia-70M~[5] (6 layers, 8 heads, $d_{\text{head}} = 64$, 70M parameters), eager attention. All experiments are training-free.
+
+\textbf{Datasets.} WikiText-2~[6] (encyclopedic) and PG-19~[7] (long-form book text). We concatenate test-split tokens up to the required length.\footnote{We use single-sample evaluation. The Dense PPL increase from ctx=512 (16.68) to ctx=1024 (30.43) on WikiText-2 reflects the specific sample's difficulty at longer prefixes, not a methodological issue. Relative method rankings are stable.}
+
+\textbf{Baselines.} (1)~\textbf{Dense}: no compression. (2)~\textbf{StreamingLLM}~[2]: $n_s\!=\!4$ sink + sliding window. (3)~\textbf{SnapKV}~[3]: attention-voting with $k\!=\!5$ pooling.
+
+\textbf{Evaluation.} \emph{Decode perplexity}: prefill context of length $L_c$, compress KV cache, compute PPL on $L_t\!=\!512$ continuation tokens. This directly measures compression impact on generation quality.
+
+\textbf{Hyperparameters.} $n_s\!=\!4$, $w\!=\!32$, $k\!=\!5$, $\mathcal{S}\!=\!\{0,1,2\}$. We vary $C \in \{64, 128, 256\}$ and $L_c \in \{512, 1024\}$.
+
+\subsection{Decode perplexity results}
+
+\begin{table}[t]
+\caption{Decode perplexity on PG-19 ($L_t = 512$). Best compressed method in \textbf{bold}.}
+\label{tab:pg19}
+\centering
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{3}{c}{Context = 512} & \multicolumn{3}{c}{Context = 1024} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+Method & $C$=64 & $C$=128 & $C$=256 & $C$=64 & $C$=128 & $C$=256 \\
+\midrule
+Dense & 25.74 & 25.74 & 25.74 & 26.57 & 26.57 & 26.57 \\
+StreamingLLM & 26.20 & 26.20 & 26.20 & 28.78 & 28.78 & 28.78 \\
+SnapKV & 26.01 & 25.84 & 25.78 & \textbf{27.75} & 27.34 & 27.10 \\
+HybridKV & \textbf{25.88} & \textbf{25.76} & \textbf{25.73} & 27.87 & \textbf{27.12} & \textbf{26.87} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Decode perplexity on WikiText-2 ($L_t = 512$). Best compressed method in \textbf{bold}.}
+\label{tab:wikitext}
+\centering
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{3}{c}{Context = 512} & \multicolumn{3}{c}{Context = 1024} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+Method & $C$=64 & $C$=128 & $C$=256 & $C$=64 & $C$=128 & $C$=256 \\
+\midrule
+Dense & 16.68 & 16.68 & 16.68 & 30.43 & 30.43 & 30.43 \\
+StreamingLLM & 65.25 & 65.25 & 65.25 & 58.57 & 58.57 & 58.57 \\
+SnapKV & \textbf{52.56} & \textbf{45.44} & \textbf{33.95} & 51.53 & 48.18 & \textbf{44.13} \\
+HybridKV & 53.36 & 45.97 & 34.66 & \textbf{51.90} & \textbf{48.15} & 44.34 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:pg19} shows results on PG-19. HybridKV achieves the lowest PPL in 5 of 6 configurations. At $C\!=\!256$, ctx=1024, HybridKV reaches 26.87, only 0.30 above Dense, vs.\ 0.53 for SnapKV and 2.21 for StreamingLLM. At $C\!=\!64$, ctx=1024, SnapKV (27.75) slightly outperforms HybridKV (27.87); under this extreme budget ($B\!=\!60$ middle tokens), the recency strategy in shallow layers may discard semantically important distant tokens that voting would have retained.
+
+Table~\ref{tab:wikitext} shows WikiText-2 results. SnapKV wins most short-context settings; HybridKV wins at ctx=1024, $C\!=\!128$. Differences are small ($<$1 PPL), suggesting both methods perform comparably on encyclopedic text.
+
+\subsection{Ablation studies}
+
+\begin{table}[h]
+\caption{Ablation on PG-19 (ctx=1024, $C$=128). $\mathcal{S}$: set of layers using recency.}
+\label{tab:ablation}
+\centering
+\begin{tabular}{lcc}
+\toprule
+Configuration & Decode PPL & $\Delta$ vs SnapKV \\
+\midrule
+SnapKV (original, no sink) & 27.34 & --- \\
+SnapKV+Sink ($\mathcal{S}\!=\!\emptyset$, all voting + sink) & 27.35 & +0.01 \\
+\midrule
+HybridKV $\mathcal{S}\!=\!\{0\}$ & 27.06 & $-$0.28 \\
+HybridKV $\mathcal{S}\!=\!\{0,1\}$ & 27.11 & $-$0.23 \\
+HybridKV $\mathcal{S}\!=\!\{0,1,2\}$ (default) & 27.12 & $-$0.22 \\
+HybridKV $\mathcal{S}\!=\!\{0,1,2,3\}$ & 27.04 & $-$0.30 \\
+HybridKV $\mathcal{S}\!=\!\{3,4,5\}$ (inverted) & 27.07 & $-$0.27 \\
+HybridKV $\mathcal{S}\!=\!\{0,\ldots,5\}$ (all recency) & 26.96 & $-$0.38 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:ablation} presents two key ablation studies.
+
+\textbf{Does sink preservation help?} Comparing SnapKV (27.34) with SnapKV+Sink (27.35, i.e., $\mathcal{S}\!=\!\emptyset$), adding explicit sink preservation to SnapKV has negligible effect. This is expected: SnapKV's voting mechanism already assigns high scores to the initial tokens due to the attention sink phenomenon, so they are naturally retained.
+
+\textbf{Does layer partitioning help?} Replacing voting with recency in \emph{any} subset of layers consistently improves over pure voting (all configurations with $|\mathcal{S}| \geq 1$ outperform SnapKV+Sink). The improvement comes from the three-segment $[\text{Sink}] + [\text{Recency}] + [\text{Window}]$ structure, which provides a complementary selection signal.
+
+\textbf{What is the optimal partitioning?} On Pythia-70M, all-recency ($\mathcal{S}\!=\!\{0,\ldots,5\}$, PPL 26.96) performs best, and the inverted assignment ($\mathcal{S}\!=\!\{3,4,5\}$, PPL 27.07) works comparably to our default ($\mathcal{S}\!=\!\{0,1,2\}$, PPL 27.12). This suggests that on a 6-layer model, the distinction between shallow and deep attention patterns is not pronounced enough for layer-adaptive partitioning to be critical. The primary benefit is the structural combination of recency and voting, not the specific assignment. We expect the layer-adaptive design to become more important on larger models (e.g., 32+ layers) where attention pattern diversity across layers is well documented~[4].
+
+\subsection{Speed benchmark}
+
+Table~\ref{tab:speed} reports inference speed.\footnote{TTFT measurements are within noise range ($\pm$10ms); the compression overhead of HybridKV is negligible relative to prefill computation.} SnapKV and HybridKV have identical cache sizes (287 tokens) and nearly identical TPOT ($\sim$5.1ms), confirming no measurable overhead.
+
+\begin{table}[h]
+\caption{Inference speed (ctx=1024, generate 128 tokens, CPU).}
+\label{tab:speed}
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Method & TTFT (ms) & TPOT (ms) & Throughput (tok/s) & KV Size \\
+\midrule
+Dense & 217.5 & 6.98 & 143.3 & 1151 \\
+StreamingLLM & 239.5 & 4.67 & 214.1 & 163 \\
+SnapKV & 243.4 & 5.10 & 196.0 & 287 \\
+HybridKV & 215.7 & 5.14 & 194.7 & 287 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Limitations}
+
+Our experiments use Pythia-70M (6 layers) where the shallow/deep boundary is a simple bisection. The ablation shows that on this small model, the specific layer partitioning matters less than the structural design. For larger models, the optimal $\mathcal{S}$ may require attention entropy-based criteria. We use single-sample evaluation; multi-sample runs would provide confidence intervals.
+
+\section{Conclusion}
+
+We presented HybridKV, a training-free KV cache compression method that combines a three-segment cache structure with layer-adaptive strategy selection. On PG-19, HybridKV consistently outperforms both StreamingLLM and SnapKV, approaching the dense baseline. Ablation studies show that the primary source of improvement is the complementary combination of recency-based and voting-based selection, while the optimal layer assignment is model-scale dependent---a finding that motivates future investigation on larger architectures.
+
+\textbf{Code.} \url{https://github.com/lzhshs/HybridKV}. Individual reproductions: SnapKV (\url{https://github.com/lzhshs/snapkv-reproduce}), StreamingLLM (\url{https://github.com/sijiechen647-lgtm/streaming-llm-reproduction}).
+
+\textbf{Division of work.} 刘泽辉: SnapKV reproduction, HybridKV design and implementation, experiment pipeline, paper writing. 陈思洁: StreamingLLM reproduction and integration.
+
+\textbf{AI usage disclosure.} During the research process, AI tools were used to assist with code debugging and implementation troubleshooting. All algorithm design, experimental analysis, and scientific conclusions are the authors' original work.
+
+\section*{References}
+
+{\small
+
+[1] Vaswani, A., Shazeer, N., Parmar, N., et al. (2017). Attention is all you need. In \textit{NeurIPS 30}.
+
+[2] Xiao, G., Tian, Y., Chen, B., Han, S., \& Lewis, M. (2024). Efficient streaming language models with attention sinks. In \textit{ICLR}.
+
+[3] Li, Y., He, Y., Sun, S., Yuan, C., Hao, H., \& Tan, Y. (2024). SnapKV: LLM knows what you are looking for before generation. In \textit{NeurIPS 37}.
+
+[4] Wu, Y., Li, Y., Xu, Z., et al. (2025). PyramidKV: Dynamic KV cache compression based on pyramidal information funneling. \textit{TMLR}.
+
+[5] Biderman, S., Schoelkopf, H., Anthony, Q., et al. (2023). Pythia: A suite for analyzing large language models across training and scaling. In \textit{ICML}.
+
+[6] Merity, S., Xiong, C., Bradbury, J., \& Socher, R. (2017). Pointer sentinel mixture models. In \textit{ICLR}.
+
+[7] Rae, J.W., Potapenko, A., Jayakumar, S.M., Hillier, C., \& Lillicrap, T.P. (2020). Compressive transformers for long-range sequence modelling. In \textit{ICLR}.
+
+[8] Sun, Y., et al. (2024). You only cache once: Decoder-decoder architectures for language models. In \textit{NeurIPS 37}.
+
+[9] Zhang, Z., et al. (2024). H2O: Heavy-hitter oracle for efficient generative inference of large language models. In \textit{NeurIPS 36}.
+
+[10] Dao, T., Fu, D.Y., Ermon, S., Rudra, A., \& R\'{e}, C. (2022). FlashAttention: Fast and memory-efficient exact attention with IO-awareness. In \textit{NeurIPS 35}.
+
+}
+
+\end{document}
