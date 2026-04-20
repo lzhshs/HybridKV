@@ -1,6 +1,6 @@
 \documentclass{article}
 
-\usepackage[preprint]{neurips_2025}
+\usepackage{neurips_2025}
 
 \usepackage{xeCJK}
 \setCJKmainfont{STSong}
@@ -151,11 +151,11 @@ HybridKV $\mathcal{S}\!=\!\{0,\ldots,5\}$ (all recency) & 26.96 & $-$0.38 \\
 
 Table~\ref{tab:ablation} presents two key ablation studies.
 
-\textbf{Does sink preservation help?} Comparing SnapKV (27.34) with SnapKV+Sink (27.35, i.e., $\mathcal{S}\!=\!\emptyset$), adding explicit sink preservation to SnapKV has negligible effect. This is expected: SnapKV's voting mechanism already assigns high scores to the initial tokens due to the attention sink phenomenon, so they are naturally retained.
+\textbf{Effect of sink preservation.} Comparing SnapKV (27.34) with SnapKV+Sink (27.35, i.e., $\mathcal{S}\!=\!\emptyset$), adding explicit sink preservation to SnapKV has negligible effect. This is expected: SnapKV's voting mechanism already assigns high scores to the initial tokens due to the attention sink phenomenon, so they are naturally retained.
 
-\textbf{Does layer partitioning help?} Replacing voting with recency in \emph{any} subset of layers consistently improves over pure voting (all configurations with $|\mathcal{S}| \geq 1$ outperform SnapKV+Sink). The improvement comes from the three-segment $[\text{Sink}] + [\text{Recency}] + [\text{Window}]$ structure, which provides a complementary selection signal.
+\textbf{Effect of layer partitioning.} Replacing voting with recency in \emph{any} subset of layers consistently improves over pure voting (all configurations with $|\mathcal{S}| \geq 1$ outperform SnapKV+Sink). The improvement comes from the three-segment $[\text{Sink}] + [\text{Recency}] + [\text{Window}]$ structure, which provides a complementary selection signal.
 
-\textbf{What is the optimal partitioning?} On Pythia-70M, all-recency ($\mathcal{S}\!=\!\{0,\ldots,5\}$, PPL 26.96) performs best, and the inverted assignment ($\mathcal{S}\!=\!\{3,4,5\}$, PPL 27.07) works comparably to our default ($\mathcal{S}\!=\!\{0,1,2\}$, PPL 27.12). This suggests that on a 6-layer model, the distinction between shallow and deep attention patterns is not pronounced enough for layer-adaptive partitioning to be critical. The primary benefit is the structural combination of recency and voting, not the specific assignment. Note that $\mathcal{S}\!=\!\{0,\ldots,5\}$ retains sink + recent + window at all layers, which is structurally similar to StreamingLLM but with a larger budget ($C\!=\!128$ vs.\ $n_s\!+\!w\!=\!36$). The gap between StreamingLLM (28.78) and all-recency HybridKV (26.96) in Table~\ref{tab:pg19} confirms that both the expanded budget and three-segment structure contribute. We expect the layer-adaptive design to become more important on larger models (e.g., 32+ layers) where attention pattern diversity across layers is well documented~[4].
+\textbf{Optimal partitioning.} On Pythia-70M, all-recency ($\mathcal{S}\!=\!\{0,\ldots,5\}$, PPL 26.96) performs best, and the inverted assignment ($\mathcal{S}\!=\!\{3,4,5\}$, PPL 27.07) works comparably to our default ($\mathcal{S}\!=\!\{0,1,2\}$, PPL 27.12). This suggests that on a 6-layer model, the distinction between shallow and deep attention patterns is not pronounced enough for layer-adaptive partitioning to be critical. The primary benefit is the structural combination of recency and voting, not the specific assignment. Note that $\mathcal{S}\!=\!\{0,\ldots,5\}$ retains sink + recent + window at all layers, which is structurally similar to StreamingLLM but with a larger budget ($C\!=\!128$ vs.\ $n_s\!+\!w\!=\!36$). The gap between StreamingLLM (28.78) and all-recency HybridKV (26.96) in Table~\ref{tab:pg19} confirms that both the expanded budget and three-segment structure contribute. We expect the layer-adaptive design to become more important on larger models (e.g., 32+ layers) where attention pattern diversity across layers is well documented~[4].
 
 \subsection{Speed benchmark}
 
@@ -187,7 +187,7 @@ We presented HybridKV, a training-free KV cache compression method that combines
 
 \textbf{Code.} \url{https://github.com/lzhshs/HybridKV}. Individual reproductions: SnapKV (\url{https://github.com/lzhshs/snapkv-reproduce}), StreamingLLM (\url{https://github.com/sijiechen647-lgtm/streaming-llm-reproduction}).
 
-\textbf{Division of work.} 刘泽辉: SnapKV reproduction, HybridKV design and implementation, experiment pipeline, paper writing. 陈思洁: StreamingLLM reproduction and integration.
+\textbf{Division of work.} 刘泽辉: SnapKV reproduction, HybridKV design and implementation, experiment pipeline, paper writing. 陈思洁: StreamingLLM reproduction and integration, related work literature survey.
 
 \textbf{AI usage disclosure.} During the research process, AI tools were used to assist with code debugging and implementation troubleshooting. All algorithm design, experimental analysis, and scientific conclusions are the authors' original work.
 
