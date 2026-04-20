@@ -26,7 +26,7 @@
 \thispagestyle{plain}
 
 \begin{abstract}
-KV cache compression is critical for efficient inference in autoregressive language models. Existing methods apply a single strategy uniformly across all layers: StreamingLLM retains attention sink tokens and a sliding window, while SnapKV uses attention-based voting to select important tokens. We propose HybridKV, a training-free, layer-adaptive KV cache compression method that combines a three-segment cache structure---$[\text{Sink}] + [\text{Selected}] + [\text{Window}]$---with per-layer selection strategies: recency-based selection for shallow layers and attention-voting for deep layers. Experiments on Pythia-70M with PG-19 and WikiText-2 show that HybridKV consistently outperforms both StreamingLLM and SnapKV on PG-19 long-form text, and matches SnapKV on WikiText-2, while maintaining comparable inference speed. Ablation studies reveal that the complementary combination of recency-based and voting-based selection, rather than sink preservation alone, is the primary driver of improvement, and that the optimal layer partitioning is model-scale dependent.
+KV cache compression is critical for efficient inference in autoregressive language models. Existing methods apply a single strategy uniformly across all layers: StreamingLLM retains attention sink tokens and a sliding window, while SnapKV uses attention-based voting to select important tokens. We propose HybridKV, a training-free, layer-adaptive KV cache compression method that combines a three-segment cache structure---$[\text{Sink}] + [\text{Selected}] + [\text{Window}]$---with per-layer selection strategies: recency-based selection for shallow layers and attention-voting for deep layers. Experiments on Pythia-70M with PG-19 and WikiText-2 show that HybridKV outperforms both StreamingLLM and SnapKV in most configurations on PG-19 long-form text, and matches SnapKV on WikiText-2, while maintaining comparable inference speed. Ablation studies reveal that the complementary combination of recency-based and voting-based selection, rather than sink preservation alone, is the primary driver of improvement, and that the optimal layer partitioning is model-scale dependent.
 Code: \url{https://github.com/lzhshs/HybridKV}.
 \end{abstract}
 
@@ -48,7 +48,7 @@ Given an input sequence of length $n$, standard multi-head attention computes $\
 
 \textbf{StreamingLLM} compresses to $\{1, \ldots, n_s\} \cup \{n\!-\!w\!+\!1, \ldots, n\}$, retaining $n_s$ sink tokens and $w$ recent tokens.
 
-\textbf{SnapKV} uses attention from the last $w$ query positions to vote for important prefix positions. Scores are pooled with a 1D max-pooling kernel\footnote{The original SnapKV paper uses average pooling by default; our implementation uses max-pooling following common practice in subsequent works. We verified that the choice has minimal impact on relative rankings.} of size $k$ along the key dimension:
+\textbf{SnapKV} uses attention from the last $w$ query positions to vote for important prefix positions. Scores are pooled with a 1D max-pooling kernel\footnote{The original SnapKV paper uses average pooling by default; our implementation uses max-pooling following common practice in subsequent works. Based on community benchmarks, this choice has limited impact on relative method rankings.} of size $k$ along the key dimension:
 \begin{equation}
     s_j = \sum_{i=n-w+1}^{n} \bigl[\text{Pool}_{k}(A_{i,\,1:n-w})\bigr]_j, \quad j \in \{1, \ldots, n\!-\!w\}
 \end{equation}
@@ -160,7 +160,7 @@ Table~\ref{tab:ablation} presents two key ablation studies.
 
 \subsection{Speed benchmark}
 
-Table~\ref{tab:speed} reports inference speed.\footnote{TTFT measurements are within noise range ($\pm$10ms); the compression overhead of HybridKV is negligible relative to prefill computation.} SnapKV and HybridKV have identical cache sizes (287 tokens) and nearly identical TPOT ($\sim$5.1ms), confirming no measurable overhead.
+Table~\ref{tab:speed} reports inference speed.\footnote{TTFT measurements are within noise range ($\pm$10ms); the compression overhead of HybridKV is negligible relative to prefill computation.} SnapKV and HybridKV have identical cache sizes (287 tokens) and nearly identical TPOT ($\sim$5.1ms), confirming no measurable overhead. The results illustrate a clear memory--quality trade-off: StreamingLLM achieves the smallest cache and fastest TPOT but the worst PPL on PG-19; HybridKV and SnapKV occupy the middle ground with identical cache sizes.
 
 \begin{table}[h]
 \caption{Inference speed (ctx=1024, generate 128 tokens, CPU).}
@@ -200,9 +200,9 @@ We presented HybridKV, a training-free KV cache compression method that combines
 
 [2] Xiao, G., Tian, Y., Chen, B., Han, S., \& Lewis, M. (2024). Efficient streaming language models with attention sinks. In \textit{ICLR}.
 
-[3] Li, Y., He, Y., Sun, S., Yuan, C., Hao, H., \& Tan, Y. (2024). SnapKV: LLM knows what you are looking for before generation. In \textit{NeurIPS 37}.
+[3] Li, Y., Huang, Y., Yang, B., Venkitesh, B., Locatelli, A., Ye, H., Cai, T., Lewis, P., \& Chen, D. (2024). SnapKV: LLM knows what you are looking for before generation. In \textit{NeurIPS 37}.
 
-[4] Wu, Y., Li, Y., Xu, Z., et al. (2025). PyramidKV: Dynamic KV cache compression based on pyramidal information funneling. \textit{TMLR}.
+[4] Cai, Z., Zhang, Y., Gao, B., et al. (2025). PyramidKV: Dynamic KV cache compression based on pyramidal information funneling. In \textit{COLM}.
 
 [5] Biderman, S., Schoelkopf, H., Anthony, Q., et al. (2023). Pythia: A suite for analyzing large language models across training and scaling. In \textit{ICML}.
 
@@ -212,7 +212,7 @@ We presented HybridKV, a training-free KV cache compression method that combines
 
 [8] Sun, Y., et al. (2024). You only cache once: Decoder-decoder architectures for language models. In \textit{NeurIPS 37}.
 
-[9] Zhang, Z., et al. (2024). H2O: Heavy-hitter oracle for efficient generative inference of large language models. In \textit{NeurIPS 36}.
+[9] Zhang, Z., et al. (2023). H2O: Heavy-hitter oracle for efficient generative inference of large language models. In \textit{NeurIPS 36}.
 
 [10] Dao, T., Fu, D.Y., Ermon, S., Rudra, A., \& R\'{e}, C. (2022). FlashAttention: Fast and memory-efficient exact attention with IO-awareness. In \textit{NeurIPS 35}.
 
