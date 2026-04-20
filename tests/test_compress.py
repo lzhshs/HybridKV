@@ -5,6 +5,7 @@ import torch
 from transformers import GPTNeoXForCausalLM, AutoTokenizer, DynamicCache
 from snapkv import snap_kv_compress, SnapKVWrapper
 from streaming_llm import streaming_llm_compress, StreamingLLMWrapper
+from hybridkv import hybrid_kv_compress, HybridKVWrapper
 
 
 @pytest.fixture(scope="module")
@@ -99,3 +100,82 @@ def test_streaming_llm_wrapper_prefill(model_and_input):
     outputs, compressed = wrapper.prefill_and_compress(input_ids)
     assert compressed.layers[0].keys.shape[2] == 4 + 32
     assert outputs.logits.shape[1] == input_ids.shape[1]
+
+
+def test_hybrid_kv_compress_output_length(model_and_input):
+    """HybridKV produces [sink] + [selected] + [window] with correct total length."""
+    model, input_ids = model_and_input
+    n_sink, window_size, max_capacity = 4, 32, 64
+
+    with torch.no_grad():
+        out = model(input_ids=input_ids, use_cache=True, output_attentions=True)
+
+    key = out.past_key_values.layers[0].keys
+    value = out.past_key_values.layers[0].values
+    attn = out.attentions[0]
+
+    # Shallow layer (Recent strategy)
+    new_key, new_value = hybrid_kv_compress(
+        layer_idx=0, attention_scores=attn, key_states=key, value_states=value,
+        n_sink=n_sink, window_size=window_size, max_capacity=max_capacity,
+        shallow_layers=[0, 1, 2],
+    )
+    expected_len = max_capacity + window_size
+    assert new_key.shape[2] == expected_len
+    assert new_value.shape[2] == expected_len
+
+    # Deep layer (SnapKV strategy)
+    new_key_deep, new_value_deep = hybrid_kv_compress(
+        layer_idx=3, attention_scores=attn, key_states=key, value_states=value,
+        n_sink=n_sink, window_size=window_size, max_capacity=max_capacity,
+        shallow_layers=[0, 1, 2],
+    )
+    assert new_key_deep.shape[2] == expected_len
+
+
+def test_hybrid_kv_compress_noop_short():
+    """HybridKV returns input unchanged if seq <= window + capacity."""
+    batch, heads, seq_len, dim = 1, 8, 50, 64
+    attn = torch.randn(batch, heads, seq_len, seq_len)
+    key = torch.randn(batch, heads, seq_len, dim)
+    value = torch.randn(batch, heads, seq_len, dim)
+    new_key, new_value = hybrid_kv_compress(
+        layer_idx=0, attention_scores=attn, key_states=key, value_states=value,
+        n_sink=4, window_size=32, max_capacity=64, shallow_layers=[0, 1, 2],
+    )
+    assert new_key.shape == key.shape
+
+
+def test_hybrid_kv_shallow_keeps_sink_and_recent(model_and_input):
+    """Shallow layer keeps first n_sink tokens exactly (sink) and last budget from middle (recent)."""
+    model, input_ids = model_and_input
+    n_sink, window_size, max_capacity = 4, 32, 64
+
+    with torch.no_grad():
+        out = model(input_ids=input_ids, use_cache=True, output_attentions=True)
+
+    key = out.past_key_values.layers[0].keys
+    value = out.past_key_values.layers[0].values
+    attn = out.attentions[0]
+
+    new_key, _ = hybrid_kv_compress(
+        layer_idx=0, attention_scores=attn, key_states=key, value_states=value,
+        n_sink=n_sink, window_size=window_size, max_capacity=max_capacity,
+        shallow_layers=[0, 1, 2],
+    )
+    # First n_sink tokens in output should match first n_sink in original
+    assert torch.equal(new_key[:, :, :n_sink, :], key[:, :, :n_sink, :])
+    # Last window_size tokens in output should match last window_size in original
+    assert torch.equal(new_key[:, :, -window_size:, :], key[:, :, -window_size:, :])
+
+
+def test_hybrid_wrapper_prefill(model_and_input):
+    """HybridKVWrapper.prefill_and_compress returns compressed cache for all layers."""
+    model, input_ids = model_and_input
+    wrapper = HybridKVWrapper(model, n_sink=4, window_size=32, max_capacity=64)
+    outputs, compressed = wrapper.prefill_and_compress(input_ids)
+
+    num_layers = model.config.num_hidden_layers
+    assert len(compressed.layers) == num_layers
+    for i in range(num_layers):
+        assert compressed.layers[i].keys.shape[2] == 64 + 32
