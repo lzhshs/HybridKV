@@ -3,6 +3,7 @@
 import pytest
 import torch
 from transformers import GPTNeoXForCausalLM, AutoTokenizer, DynamicCache
+from snapkv import snap_kv_compress, SnapKVWrapper
 
 
 @pytest.fixture(scope="module")
@@ -25,3 +26,41 @@ def test_baseline_forward(model_and_input):
         out = model(input_ids=input_ids, use_cache=True)
     assert out.logits.shape[0] == 1
     assert out.logits.shape[1] == input_ids.shape[1]
+
+
+def test_snap_kv_compress_reduces_length(model_and_input):
+    """SnapKV compress returns KV with correct reduced length."""
+    model, input_ids = model_and_input
+    window_size, max_capacity = 32, 64
+
+    with torch.no_grad():
+        out = model(input_ids=input_ids, use_cache=True, output_attentions=True)
+
+    key = out.past_key_values.layers[0].keys
+    value = out.past_key_values.layers[0].values
+    attn = out.attentions[0]
+
+    new_key, new_value = snap_kv_compress(
+        attn, key, value, window_size=window_size, max_capacity=max_capacity
+    )
+    expected_len = max_capacity + window_size
+    assert new_key.shape[2] == expected_len
+    assert new_value.shape[2] == expected_len
+
+
+def test_snap_kv_compress_noop_short_seq():
+    """SnapKV returns input unchanged if seq_len <= window + capacity."""
+    batch, heads, seq_len, dim = 1, 8, 50, 64
+    attn = torch.randn(batch, heads, seq_len, seq_len)
+    key = torch.randn(batch, heads, seq_len, dim)
+    value = torch.randn(batch, heads, seq_len, dim)
+    new_key, new_value = snap_kv_compress(attn, key, value, window_size=32, max_capacity=64)
+    assert new_key.shape == key.shape
+
+
+def test_snapkv_wrapper_prefill(model_and_input):
+    """SnapKVWrapper.prefill_and_compress returns compressed cache."""
+    model, input_ids = model_and_input
+    wrapper = SnapKVWrapper(model, window_size=32, max_capacity=64)
+    outputs, compressed = wrapper.prefill_and_compress(input_ids)
+    assert compressed.layers[0].keys.shape[2] == 64 + 32
